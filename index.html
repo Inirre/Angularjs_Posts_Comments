@@ -1,0 +1,108 @@
+<!--
+    This code was made with Grafikart and his Angularjs training on YouTube:
+    https://www.grafikart.fr
+-->
+
+<!DOCTYPE html>
+
+<head>
+    <title></title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body ng-app="MyApp">
+
+    <div ng-view></div>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+    <script src="https://code.angularjs.org/1.7.9/angular-route.min.js"></script>
+    
+    <script>
+
+        var app = angular.module('MyApp', ['ngRoute']);
+
+        app.config(function($routeProvider){
+            $routeProvider
+                .when('/', {templateUrl : 'partials/home.html', controller : 'PostsCtrl'})
+                .when('/comments/:id', {templateUrl : 'partials/comments.html', controller : 'CommentsCtrl'})
+                .otherwise({redirectTo : '/'});
+        });
+
+        app.factory('PostsFactory', function($http, $q){
+            var factory = {
+
+                posts : false,
+
+                getPosts : function(){
+                    var deferred = $q.defer();
+                    if (factory.posts){
+                        deferred.resolve(factory.posts);
+                    } else {
+                        $http.get('posts.json').then(
+                            function successCallback(response){
+                                factory.posts = response.data;
+                                deferred.resolve(factory.posts);
+                            }, // end successCallback
+                            function errorCallback(response){
+                                deferred.reject(
+                                'Impossible de charger les données'
+                                ); // end reject
+                            } // end errorCallback
+                        ); // end promise
+                    }
+                    return deferred.promise;
+                }, // end getPosts
+
+                getPost : function(id){
+                    var deferred = $q.defer();
+                    var post = {};
+                    var posts = factory.getPosts().then(
+                        function successCallback(response){
+                            angular.forEach(response, function(value, key) {
+                                if (value.id == id){
+                                    post = value;
+                                }
+                            }); 
+                            deferred.resolve(post);
+
+                        }, // end successCallback
+                        function errorCallback(msg){
+                            reject(msg);
+                        }
+                    ); // end then
+                    return deferred.promise;
+                } // end getPost
+
+            } // end var factory
+            return factory;
+        });
+
+        app.controller('PostsCtrl', function($scope, PostsFactory){
+            $scope.posts = PostsFactory.getPosts().then(
+                function(posts){
+                    $scope.posts = posts;
+                },
+                function(msg){
+                    alert(msg);
+                }
+            );
+        });
+
+        app.controller('CommentsCtrl', function($scope, $routeParams, PostsFactory){
+            var post = PostsFactory.getPost($routeParams.id).then(
+                function(post){
+                    post = post;
+                    $scope.title = post.name;
+                    $scope.comments = post.comments;
+                },
+                function(msg){
+                    
+                }
+            ); // end promise
+        });
+
+
+    </script>
+
+</body>
+</html>

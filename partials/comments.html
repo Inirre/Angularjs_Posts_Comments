@@ -1,0 +1,13 @@
+<a href="#/">Back to posts</a>
+<div class="post-container">
+
+    <h1>{{title}}</h1>
+    
+    <div ng-repeat="comment in comments">
+    
+        <div class="comment-container">
+            <h4><span>By </span>{{comment.username}}</h4>
+            <p>{{comment.content}}</p>
+        </div>
+    </div>
+</div>
